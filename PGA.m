@@ -18,7 +18,8 @@ aproximacion = -3;
 ficheros = dir("Fase1\sin_perturbacion\");
 
 funciones_de_transferencia = {};
-
+Kms  = {};
+taus = {};
 for i = 1:length(ficheros)
     fichero = ficheros(i).name;
     
@@ -64,13 +65,24 @@ for i = 1:length(ficheros)
     fprintf("Modelo de la planta (FdT en m/s/V) (escalon " + str_amplitud_escalon + ")")
     Km = c_inf/amplitud_escalon
     tau = -ts/aproximacion
+    
+    Kms{end + 1}  = Km;
+    taus{end + 1} = tau;
 
     syms s
     funciones_de_transferencia{end + 1} = Km/(tau*s + 1);
 end
 
-G = funciones_de_transferencia;
+fprintf("Funciones de transferencia:")
+vpa(funciones_de_transferencia, decimales)
+
+fprintf("Funcion de transferencia media:")
+Km  = mean(cell2mat(Kms));
+tau = mean(cell2mat(taus));
+
+G = Km/(tau*s + 1);
 vpa(G, decimales)
+
 %% 
 % 
 % 
