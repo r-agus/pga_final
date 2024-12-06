@@ -2,11 +2,10 @@
 %% Rubén A. y David A. - Otoño 2024
 
 clear;
-decimales =4;
+decimales = 4;
 muestras_para_media = 50;
 aproximacion = -3;
-% 
-% Fase 1 - Caracterización de la planta
+%% Fase 1 - Caracterización de la planta
 % 
 % 
 % *Ejercicio 1*
@@ -16,43 +15,60 @@ aproximacion = -3;
 % de transferencia  (FdeT) en las unidades que considere más adecuadas para trabajar 
 % en el desarrollo de todo  el diseño. 
 
-escalon_sin_perturbacion = load("Fase1/escalon_sin_perturbacion");
-Ts = 35e-3;
+ficheros = dir("Fase1\sin_perturbacion\");
 
-tiempo     = escalon_sin_perturbacion(:, 1);
-referencia = escalon_sin_perturbacion(:, 2);
-salida     = escalon_sin_perturbacion(:, 3);
+funciones_de_transferencia = {};
 
-x_ini = find(referencia > 0, 1, 'first');
-x_fin = length(referencia);
+for i = 1:length(ficheros)
+    fichero = ficheros(i).name;
+    
+    % Saltar '.' y '..'
+    if strcmp(fichero, '.') || strcmp(fichero, '..')
+        continue;
+    end
+    amplitud_escalon = strsplit(fichero, '_'); amplitud_escalon = amplitud_escalon{end};
 
-t_ini = tiempo(x_ini);
-t_fin = tiempo(end);
+    escalon_sin_perturbacion = load("Fase1\sin_perturbacion\" + fichero);
+    Ts = 35e-3;
+    
+    tiempo     = escalon_sin_perturbacion(:, 1);
+    referencia = escalon_sin_perturbacion(:, 2);
+    salida     = escalon_sin_perturbacion(:, 3);
+    
+    x_ini = find(abs(referencia) > 0, 1, 'first');
+    x_fin = length(referencia);
+    
+    t_ini = tiempo(x_ini);
+    t_fin = tiempo(end);
+    
+    t_interes = tiempo(x_ini:x_fin) - tiempo(x_ini);
+    c_interes = salida(x_ini:x_fin);
+    
+    fprintf("Valor final de respuesta al escalón " + amplitud_escalon)
+    c_inf = mean(c_interes(end-muestras_para_media, end))
+    
+    fprintf("Valores de tiempo de establecimiento " + amplitud_escalon)
+    ks = find(abs(c_interes) >= abs(0.95*c_inf), 1, 'first') - 1
+    ts = ks*Ts
+    
+    figure
+    hold on
+    stairs(t_interes, abs(c_interes))
+    plot([0 t_fin - t_ini], abs(0.95*c_inf)*[1 1], 'r:')
+    xlim([0 5])
+    title("Respuesta al escalón (" + amplitud_escalon + ") de la planta")
+    xlabel("Tiempo (s)")
+    ylabel("Abs velocidad escalera (m/s) ante escalón de " + amplitud_escalon)
+    
+    fprintf("Modelo de la planta (FdT en m/s/V) (escalon " + amplitud_escalon + ")")
+    Km = c_inf
+    tau = -ts/aproximacion
 
-t_interes = tiempo(x_ini:x_fin) - tiempo(x_ini);
-c_interes = salida(x_ini:x_fin);
+    syms s
+    funciones_de_transferencia{end + 1} = Km/(tau*s + 1);
+end
 
-fprintf("Valor final de respuesta al escalón")
-c_inf = mean(c_interes(end-muestras_para_media, end))
-
-fprintf("Valores de tiempo de establecimiento")
-ks = find(c_interes >= 0.95*c_inf, 1, 'first') - 1
-ts = ks*Ts
-
-figure
-hold on
-stairs(t_interes, c_interes)
-plot([0 t_fin - t_ini], 0.95*c_inf*[1 1], 'r:')
-title("Respuesta al escalón de la planta")
-xlabel("Tiempo (s)")
-ylabel("Velocidad escalera (m/s)")
-
-fprintf("Modelo de la planta (FdT en m/s/V)")
-Km = c_inf
-tau = -ts/aproximacion
-
-syms s
-G = Km/(tau*s + 1);
+G = funciones_de_transferencia;
 vpa(G, decimales)
 %% 
 % 
