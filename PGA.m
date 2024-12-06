@@ -20,6 +20,8 @@ ficheros = dir("Fase1\sin_perturbacion\");
 funciones_de_transferencia = {};
 Kms  = {};
 taus = {};
+tiempos_de_interes = {};
+salidas_de_interes = {};
 for i = 1:length(ficheros)
     fichero = ficheros(i).name;
     
@@ -46,6 +48,9 @@ for i = 1:length(ficheros)
     t_interes = tiempo(x_ini:x_fin) - tiempo(x_ini);
     c_interes = salida(x_ini:x_fin);
     
+    tiempos_de_interes{end + 1} = t_interes;
+    salidas_de_interes{end + 1} = c_interes;
+
     fprintf("Valor final de respuesta al escalón " + str_amplitud_escalon)
     c_inf = mean(c_interes(end-muestras_para_media, end))
     
@@ -93,19 +98,36 @@ vpa(G, decimales)
 % 
 % 
 
-sim_data = load("Fase1/salidaSimulinkEj2");
-t_sim = sim_data(:, 1);
-c_sim = sim_data(:, 2);
+open_system("Fase1/ejercicio2")
+set_param("ejercicio2/Escalera mecánica", 'Numerator', string(Km), 'Denominator', '[' + string(tau) + ' 1' + ']')
 
-figure
-hold on
-title("Comparación simulación y medidas")
-plot(t_sim, c_sim)
-stairs(t_interes, c_interes)
-legend('Modelo simulado', 'Medidas reales','Location','southeast')
-xlim([0 5])
-xlabel("Tiempo (s)")
-ylabel("Velocidad escalera (m/s)")
+for i = 1:length(ficheros)
+    fichero = ficheros(i).name;
+    
+    % Saltar '.' y '..'
+    if strcmp(fichero, '.') || strcmp(fichero, '..')
+        continue;
+    end
+    
+    str_amplitud_escalon = strsplit(fichero, '_'); str_amplitud_escalon = str_amplitud_escalon{end};
+    amplitud_escalon = str2double(regexprep(str_amplitud_escalon, '[^-\d]', ''));
+    
+    set_param("ejercicio2/Consigna (V)", 'After', string(amplitud_escalon))
+    sim("ejercicio2")
+
+    t_sim = salidaEscalonMotor(:, 1);
+    c_sim = salidaEscalonMotor(:, 2);
+    
+    figure
+    hold on
+    title("Comparación simulación y medidas " + str_amplitud_escalon)
+    stairs(t_sim, c_sim)
+    stairs(tiempos_de_interes{i - 2}, salidas_de_interes{i - 2})
+    legend('Modelo simulado', 'Medidas reales','Location','southeast')
+    xlim([0 5])
+    xlabel("Tiempo (s)")
+    ylabel("Velocidad escalera (m/s)")
+end
 %% 
 % 
 % 
