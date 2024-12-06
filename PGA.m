@@ -26,7 +26,8 @@ for i = 1:length(ficheros)
     if strcmp(fichero, '.') || strcmp(fichero, '..')
         continue;
     end
-    amplitud_escalon = strsplit(fichero, '_'); amplitud_escalon = amplitud_escalon{end};
+    str_amplitud_escalon = strsplit(fichero, '_'); str_amplitud_escalon = str_amplitud_escalon{end};
+    amplitud_escalon = str2double(regexprep(str_amplitud_escalon, '[^-\d]', ''));
 
     escalon_sin_perturbacion = load("Fase1\sin_perturbacion\" + fichero);
     Ts = 35e-3;
@@ -44,10 +45,10 @@ for i = 1:length(ficheros)
     t_interes = tiempo(x_ini:x_fin) - tiempo(x_ini);
     c_interes = salida(x_ini:x_fin);
     
-    fprintf("Valor final de respuesta al escalón " + amplitud_escalon)
+    fprintf("Valor final de respuesta al escalón " + str_amplitud_escalon)
     c_inf = mean(c_interes(end-muestras_para_media, end))
     
-    fprintf("Valores de tiempo de establecimiento " + amplitud_escalon)
+    fprintf("Valores de tiempo de establecimiento " + str_amplitud_escalon)
     ks = find(abs(c_interes) >= abs(0.95*c_inf), 1, 'first') - 1
     ts = ks*Ts
     
@@ -56,12 +57,12 @@ for i = 1:length(ficheros)
     stairs(t_interes, abs(c_interes))
     plot([0 t_fin - t_ini], abs(0.95*c_inf)*[1 1], 'r:')
     xlim([0 5])
-    title("Respuesta al escalón (" + amplitud_escalon + ") de la planta")
+    title("Respuesta al escalón (" + str_amplitud_escalon + ") de la planta")
     xlabel("Tiempo (s)")
-    ylabel("Abs velocidad escalera (m/s) ante escalón de " + amplitud_escalon)
+    ylabel("Abs velocidad escalera (m/s) ante escalón de " + str_amplitud_escalon)
     
-    fprintf("Modelo de la planta (FdT en m/s/V) (escalon " + amplitud_escalon + ")")
-    Km = c_inf
+    fprintf("Modelo de la planta (FdT en m/s/V) (escalon " + str_amplitud_escalon + ")")
+    Km = c_inf/amplitud_escalon
     tau = -ts/aproximacion
 
     syms s
