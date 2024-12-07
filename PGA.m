@@ -39,7 +39,7 @@ for i = 1:length(ficheros)
     referencia = escalon_sin_perturbacion(:, 2);
     salida     = escalon_sin_perturbacion(:, 3);
     
-    x_ini = find(abs(referencia) > 0, 1, 'first');
+    x_ini = find(abs(referencia) > 0, 1, 'first') + 1; % Se suma 1 ya que se tienen dos retardos y se va a trabajar con una aproximación de primer orden
     x_fin = length(referencia);
     
     t_ini = tiempo(x_ini);
@@ -76,6 +76,7 @@ for i = 1:length(ficheros)
 
     syms s
     funciones_de_transferencia{end + 1} = Km/(tau*s + 1);
+
 end
 
 fprintf("Funciones de transferencia:")
@@ -117,13 +118,14 @@ for i = 1:length(ficheros)
 
     t_sim = salidaEscalonMotor(:, 1);
     c_sim = salidaEscalonMotor(:, 2);
-    
+    [c_ind, t_ind] = step(amplitud_escalon * tf(Kms{i - 2}, [taus{i - 2} 1]), 5);
     figure
     hold on
-    title("Comparación simulación y medidas " + str_amplitud_escalon)
+    title("Comparación modelo teórico particular, modelo medio del experimento y medidas " + str_amplitud_escalon)
+    stairs(t_ind, c_ind)
     stairs(t_sim, c_sim)
     stairs(tiempos_de_interes{i - 2}, salidas_de_interes{i - 2})
-    legend('Modelo simulado', 'Medidas reales','Location','southeast')
+    legend('Modelo individual', 'Modelo medio', 'Medidas reales','Location','southeast')
     xlim([0 5])
     xlabel("Tiempo (s)")
     ylabel("Velocidad escalera (m/s)")
@@ -170,7 +172,7 @@ vpa(Gcomp, decimales)
 % Calcule el equivalente discreto de la planta y caracterice teóricamente su 
 % respuesta ante  entrada escalón, tanto en régimen permanente como transitorio. 
 
-BoG = c2d(tf(Km, [tau 1]), Ts)
+BoG = c2d(tf(Km, [tau 1]), Ts) % BoG = (1-z^(-1)) * sum_(Polos G(s)/s) Res[G(s)/(s*(1-exp(s*Ts)*z^(-1))]
 [~, zp, ~] = zpkdata(BoG, 'v')
 
 fprintf("Valor final ante escalón unitario")
