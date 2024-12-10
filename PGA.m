@@ -2,7 +2,7 @@
 %% Rubén A. y David A. - Otoño 2024
 
 clear;
-decimales = 5;
+decimales = 5; % Solo para mostrar
 muestras_para_media = 50;
 aproximacion = -3;
 %% Fase 1 - Caracterización de la planta
@@ -13,13 +13,15 @@ aproximacion = -3;
 % de transferencia (FdeT) en las unidades que considere más adecuadas para trabajar 
 % en el desarrollo de todo el diseño. 
 
-ficheros = dir("Fase1\sin_perturbacion\");
+ficheros = dir("Fase1/sin_perturbacion/");
 
 funciones_de_transferencia = {};
 Kms  = {};
 taus = {};
 tiempos_de_interes = {};
 salidas_de_interes = {};
+amplitudes_escalon = {};
+
 for i = 1:length(ficheros)
     fichero = ficheros(i).name;
     
@@ -30,14 +32,15 @@ for i = 1:length(ficheros)
     str_amplitud_escalon = strsplit(fichero, '_'); str_amplitud_escalon = str_amplitud_escalon{end};
     amplitud_escalon = str2double(regexprep(str_amplitud_escalon, '[^-\d]', ''));
 
-    escalon_sin_perturbacion = load("Fase1\sin_perturbacion\" + fichero);
+    escalon_sin_perturbacion = load("Fase1/sin_perturbacion/" + fichero);
     Ts = 35e-3;
     
     tiempo     = escalon_sin_perturbacion(:, 1);
     referencia = escalon_sin_perturbacion(:, 2);
     salida     = escalon_sin_perturbacion(:, 3);
     
-    x_ini = find(abs(referencia) > 0, 1, 'first') + 1; % Se suma 1 ya que se tienen dos retardos y se va a trabajar con una aproximación de primer orden
+    x_ini = find(abs(referencia) > 0, 1, 'first') + 1; % Se suma 1 ya que se tienen dos retardos y se va a trabajar 
+                                                       % con una aproximación de primer orden
     x_fin = length(referencia);
     
     t_ini = tiempo(x_ini);
@@ -48,32 +51,37 @@ for i = 1:length(ficheros)
     
     tiempos_de_interes{end + 1} = t_interes;
     salidas_de_interes{end + 1} = c_interes;
+    amplitudes_escalon{end + 1} = amplitud_escalon;
 
-    fprintf("Valor final de respuesta al escalón " + str_amplitud_escalon)
-    c_inf = mean(c_interes(end-muestras_para_media, end))
+    % fprintf("Valor final de respuesta al escalón " + str_amplitud_escalon)
+    c_inf = mean(c_interes(end-muestras_para_media, end));
     
-    fprintf("Valores de tiempo de establecimiento " + str_amplitud_escalon)
-    ks = find(abs(c_interes) >= abs(0.95*c_inf), 1, 'first') - 1
-    ts = ks*Ts
+    % fprintf("Valores de tiempo de establecimiento " + str_amplitud_escalon)
+    ks = find(abs(c_interes) >= abs(0.95*c_inf), 1, 'first') - 1;
+    ts = ks*Ts;
     
     figure
     hold on
-    stairs(t_interes, abs(c_interes))
-    plot([0 t_fin - t_ini], abs(0.95*c_inf)*[1 1], 'r:')
+    stairs(t_interes, c_interes)
+    plot([0 t_fin - t_ini], 0.95*c_inf*[1 1], 'r:')
     xlim([0 5])
-    title("Respuesta al escalón (" + str_amplitud_escalon + ") de la planta")
+    title("Respuesta al escalón de " + str_amplitud_escalon + " de la planta")
     xlabel("Tiempo (s)")
-    ylabel("Abs velocidad escalera (m/s) ante escalón de " + str_amplitud_escalon)
+    ylabel("Velocidad escalera (m/s)")
     
-    fprintf("Modelo de la planta (FdT en m/s/V) (escalon " + str_amplitud_escalon + ")")
-    Km = c_inf/amplitud_escalon
-    tau = -ts/aproximacion
+    % fprintf("Modelo de la planta (FdT en m/s/V) (escalon " + str_amplitud_escalon + ")")
+    Km = c_inf/amplitud_escalon;
+    tau = -ts/aproximacion;
     
     Kms{end + 1}  = Km;
     taus{end + 1} = tau;
 
     syms s
     funciones_de_transferencia{end + 1} = Km/(tau*s + 1);
+
+    fprintf("Escalón de %d V.\n\tValor final = %.0" + decimales + "f m/s\n\tts  = %.0" ...
+        + decimales + "f s\n\tKm  = %.0" + decimales + "f m/s/V\n\ttau = %.0" + decimales + "f s", ...
+        amplitud_escalon, c_inf, ts, Km, tau)
 
 end
 
@@ -84,13 +92,17 @@ fprintf("Funcion de transferencia media:")
 Km  = mean(cell2mat(Kms));
 tau = mean(cell2mat(taus));
 
+syms s
 G = Km/(tau*s + 1);
 vpa(G, decimales)
+fprintf("Valores de la función medios:\n\tKm  = %.0" + decimales + "f m/s/V\n\ttau = %.0" + decimales + "f s", Km, tau)
 %% 
 % *Ejercicio 2*
 % 
 % Corrobore la validez del modelo mediante su simulación en Matlab/Simulink, 
 % como también se hizo en la Práctica 2
+% 
+% 
 
 open_system("Fase1/ejercicio2")
 set_param("ejercicio2/Escalera mecánica", 'Numerator', string(Km), 'Denominator', '[' + string(tau) + ' 1' + ']')
@@ -114,10 +126,10 @@ for i = 1:length(ficheros)
     [c_ind, t_ind] = step(amplitud_escalon * tf(Kms{i - 2}, [taus{i - 2} 1]), 5);
     figure
     hold on
-    title("Comparación modelo teórico particular, modelo medio del experimento y medidas " + str_amplitud_escalon)
-    stairs(t_ind, c_ind)
-    stairs(t_sim, c_sim)
-    stairs(tiempos_de_interes{i - 2}, salidas_de_interes{i - 2})
+    title("Comparación modelos con Simulink (" + str_amplitud_escalon + ")")
+    plot(t_ind, c_ind)
+    plot(t_sim, c_sim)
+    plot(tiempos_de_interes{i - 2}, salidas_de_interes{i - 2})
     legend('Modelo individual', 'Modelo medio', 'Medidas reales','Location','southeast')
     xlim([0 5])
     xlabel("Tiempo (s)")
@@ -137,19 +149,36 @@ end
 % Simulink los bloques de las alinealidades caracterizadas convenientemente colocadas 
 % y con coherencia de unidades. 
 
-% Valores obtenidos experimentalmente
-fprintf("Saturación de salida (Expresada como módulo máximo de la velocidad de la escalera en m/s). Simétrica.")
-c_max_abs = 2.11 % medida lab
+% Medida de saturación
+% Se incrementa la ganancia y se pone el valor máximo de entrada. 
+% Se obtiene el valor máximo de salida, que resulta ser igual para ambas direcciones.
+c_max_abs = 2.11; 
+fprintf("Saturación. Valor máximo de módulo de salida: |c_max| = %.02f m/s", c_max_abs)
 
-fprintf("Zona muerta. (Expresada como la tensión mínima para que se comience a mover la escalera). Asimétrica")
-deadzone_in_pos = 0.21 % medida lab
-deadzone_out_pos = -0.19 % medida lab
+% Medida de zona muerta
+% Partiendo desde cero, se disminuye la ganancia y se va incrementando la entrada gradualmente hasta que se tiene movimiento (salida != 0)
+deadzone_in_pos = 0.21; 
+deadzone_in_neg = -0.19;
+fprintf("Zona muerta. Valor mínimo de entrada. Asimétrico. DeadZone: (%.02f, %.02f) V", deadzone_in_neg, deadzone_in_pos)
 
-% Compensación de Km
-c_inf_deadzone = 0.1517; % Valor final con la zona muerta y la antigua FdT
-km_comp = Km * c_inf/c_inf_deadzone;
+% La zona muerta resta un valor fijo a la entrada, por lo que hay que
+% compensar otra vez la Km.
 
-fprintf("Nueva aproximación de la planta teniendo en cuenta la zona muerta [m/s/V]")
+% Km' = salida/(entrada - deadzone) = Km/(1-dz/entrada) 
+km_comps = zeros(1, length(amplitudes_escalon));
+for i = 1:length(km_comps)
+    if amplitudes_escalon{i} > 0
+        dz = deadzone_in_pos;
+    else
+        dz = deadzone_in_neg;
+    end
+
+    km_comps(i) = Kms{i}/(1-dz/amplitudes_escalon{i});
+end
+
+km_comp = mean(km_comps);
+
+fprintf("Nueva aproximación de la planta teniendo en cuenta la zona muerta [m/s/V]. Solo afecta a Km, no la tau")
 syms s
 Gcomp = km_comp/(tau*s + 1);
 vpa(Gcomp, decimales)
@@ -159,32 +188,32 @@ vpa(Gcomp, decimales)
 % Calcule el equivalente discreto de la planta y caracterice teóricamente su 
 % respuesta ante entrada escalón, tanto en régimen permanente como transitorio. 
 
-% Se añade un retraso para tener en cuenta el que se quitó en el ejercicio 1
-BoG = series(c2d(tf(Km, [tau 1]), Ts), tf(1, [1 0], Ts)) % BoG = ((1-z^(-1)) * sum_(Polos G(s)/s) Res[G(s)/(s*(1-exp(s*Ts)*z^(-1))]) * (1/z)
+% Se añade un retraso para tener en cuenta el que se quitó en el ejercicio
+% 1. Esto es debido a que la planta real es de segundo orden mientras que
+% se aproxima con una de primero.
+
+% BoG = ((1-z^(-1)) * sum_(Polos G(s)/s) Res[G(s)/(s*(1-exp(s*Ts)*z^(-1))]) * (1/z)
+BoG = zpk(series(c2d(tf(Km, [tau 1]), Ts), tf(1, [1 0], Ts))) 
 [~, zp, ~] = zpkdata(BoG, 'v');
 
-fprintf("Valor final ante escalón unitario")
-c_disc_inf = dcgain(BoG) % lim(z->1) BoG = 0.02345 / (1 - 0.8779)
+c_disc_inf = dcgain(BoG); % lim(z->1) BoG
+ks_disc = ceil(aproximacion / log(abs(max(zp)))) + (length(zp) - 1); % Teniendo en cuenta el retardo
+ts_disc = Ts * ks_disc;
 
-fprintf("Tiempo de establecimiento")
-ks_disc = ceil(aproximacion / log(abs(max(zp)))) + (length(zp) - 1) % Teniendo en cuenta el retardo
-ts_disc = Ts * ks_disc
+fprintf("Parámetros del BoG: \n\tc_inf = %.0" + decimales + "f m/s\n\tks = %d\n\tts = %.0"+decimales+"f s", c_disc_inf, ks_disc, ts_disc)
 %% 
 % *Ejercicio 5*
 
 pert10personas = 0.2;
-%% 
-% Con el número máximo de personas, el escalón unidad no es suficiente para 
-% iniciar el movimiento positivo. La perturbación máxima para el valor positivo 
-% es de -0.2m/s, valor con módulo superior a la salida frente al escalón unidad 
-% (0.1993 m/s).
 
-c_inf_pert_pos = max([0, Km*1 - pert10personas])
-%% 
-% Sin embargo, en el movimiento negativo, la perturbación ""ayuda"" a bajar, 
-% por lo que el valor final será de:
+% Con el número máximo de personas, el escalón unidad no es suficiente para iniciar el movimiento positivo. 
+% La perturbación máxima para el valor positivo es de -0.2m/s, valor con módulo superior a la salida frente al escalón unidad (0.1993 m/s).
+c_inf_pert_pos = max([0, Km*1 - pert10personas]);
+% Sin embargo, en el movimiento negativo, la perturbación ""ayuda"" a bajar, por lo que el valor final será de:
+c_inf_pert_neg = min([0, Km*(-1) - pert10personas]);
 
-c_inf_pert_neg = min([0, Km*(-1) - pert10personas])
+fprintf("Desplazamiento con escalón de 1V y 10 personas:  c = %.02f", c_inf_pert_pos)
+fprintf("Desplazamiento con escalón de -1V y 10 personas: c = %.02f", c_inf_pert_neg)
 %% Fase 2
 % *Ejercicio 6*
 % 
@@ -200,7 +229,7 @@ pg = -1/tau;
 clearvars -except Kg pg Ts aproximacion decimales;
 
 % Aproximación del BoG, teniendo en cuenta el retardo adicional
-%% 
+%%
 fprintf("Equivalente discreto de la planta a controlar")
 G = tf(Kg, [1 -pg]);
 retardo = tf(1, [1 0], Ts);
@@ -227,7 +256,6 @@ M_obj = tf(km, [1, -pm], Ts)*(tf(1, [1 0], Ts)^retardos)
 
 fprintf("4. Cálculo del controlador")
 F = zpk(minreal(M_obj/(BoG * (1 - M_obj))))
-
 %% 
 % Solución:
 % 
@@ -245,9 +273,7 @@ F = zpk(minreal(M_obj/(BoG * (1 - M_obj))))
 % 
 % Dibuje una topología (diagrama de bloques) del sistema de acuerdo a las unidades 
 % elegidas, que deberán aparecer indicadas en cada señal o secuencia del dibujo. 
-
-
-%% 
+% 
 % *Ejercicio 8*
 % 
 % Calcule la FdeT del sistema y caracterice teóricamente su salida ante entradas 
@@ -262,7 +288,6 @@ ts_M = Ts * (ceil(round(aproximacion / log(max(p_m_final)), 10)) + (length(p_m_f
 Km_final = dcgain(M_final) % lim_(z->1) M_final
 c_inf_mas_1V   = Km_final * 1
 c_inf_menos_1V = Km_final * (-1)
-
 %% 
 % *Ejercicio 9*
 % 
@@ -278,7 +303,6 @@ pert_10personas = -0.2;
 
 M_r = M_final;
 M_p = zpk(minreal(feedback(1, series(F, BoG))));
-
 %% 
 % La perturbación no afecta al tiempo de establecimiento, solo al valor final 
 % (y por tanto al error)
@@ -306,6 +330,5 @@ for i = 1:length(entradas)
         fprintf("\tCon %s:\tc_inf=%.03f\terpp=%.03f\ta_inf=%.03f\n", perturbaciones_names(j), c, e, a);
     end
 end
-
 %% Fase 3
 % *Ejercicio 10*
