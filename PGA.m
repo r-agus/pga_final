@@ -2,9 +2,9 @@
 %% Rubén A. y David A. - Otoño 2024
 
 clear;
-decimales = 5; % Solo para mostrar
-muestras_para_media = 50;
-aproximacion = -3;
+decimales = 5;             % Decimales a mostrar
+muestras_para_media = 50;  % Muestras del final de las respuestas a tener en cuenta para las medias
+aproximacion = -3;         % Aproximación del ln(0.05)
 %% Fase 1 - Caracterización de la planta
 % *Ejercicio 1*
 % 
@@ -53,10 +53,8 @@ for i = 1:length(ficheros)
     salidas_de_interes{end + 1} = c_interes;
     amplitudes_escalon{end + 1} = amplitud_escalon;
 
-    % fprintf("Valor final de respuesta al escalón " + str_amplitud_escalon)
     c_inf = mean(c_interes(end-muestras_para_media, end));
     
-    % fprintf("Valores de tiempo de establecimiento " + str_amplitud_escalon)
     ks = find(abs(c_interes) >= abs(0.95*c_inf), 1, 'first') - 1;
     ts = ks*Ts;
     
@@ -65,11 +63,11 @@ for i = 1:length(ficheros)
     stairs(t_interes, c_interes)
     plot([0 t_fin - t_ini], 0.95*c_inf*[1 1], 'r:')
     xlim([0 5])
+    ylim(1.1 * [min(0, c_inf) max(0, c_inf)])
     title("Respuesta al escalón de " + str_amplitud_escalon + " de la planta")
     xlabel("Tiempo (s)")
     ylabel("Velocidad escalera (m/s)")
     
-    % fprintf("Modelo de la planta (FdT en m/s/V) (escalon " + str_amplitud_escalon + ")")
     Km = c_inf/amplitud_escalon;
     tau = -ts/aproximacion;
     
@@ -79,9 +77,9 @@ for i = 1:length(ficheros)
     syms s
     funciones_de_transferencia{end + 1} = Km/(tau*s + 1);
 
-    fprintf("Escalón de %d V.\n\tValor final = %.0" + decimales + "f m/s\n\tts  = %.0" ...
+    fprintf("Escalón de %d V.\n\tMedia de las últimas %d muestras = %.0" + decimales + "f m/s\n\tts  = %.0" ...
         + decimales + "f s\n\tKm  = %.0" + decimales + "f m/s/V\n\ttau = %.0" + decimales + "f s", ...
-        amplitud_escalon, c_inf, ts, Km, tau)
+        amplitud_escalon, muestras_para_media, c_inf, ts, Km, tau)
 
 end
 
@@ -95,7 +93,7 @@ tau = mean(cell2mat(taus));
 syms s
 G = Km/(tau*s + 1);
 vpa(G, decimales)
-fprintf("Valores de la función medios:\n\tKm  = %.0" + decimales + "f m/s/V\n\ttau = %.0" + decimales + "f s", Km, tau)
+fprintf("Valores de la función media:\n\tKm  = %.0" + decimales + "f m/s/V\n\ttau = %.0" + decimales + "f s", Km, tau)
 %% 
 % *Ejercicio 2*
 % 
@@ -148,6 +146,8 @@ end
 % zona muerta, explicando el procedimiento de obtención, y añadir al modelo de 
 % Simulink los bloques de las alinealidades caracterizadas convenientemente colocadas 
 % y con coherencia de unidades. 
+% 
+% 
 
 % Medida de saturación
 % Se incrementa la ganancia y se pone el valor máximo de entrada. 
@@ -214,6 +214,8 @@ c_inf_pert_neg = min([0, Km*(-1) - pert10personas]);
 
 fprintf("Desplazamiento con escalón de 1V y 10 personas:  c = %.02f", c_inf_pert_pos)
 fprintf("Desplazamiento con escalón de -1V y 10 personas: c = %.02f", c_inf_pert_neg)
+
+%%
 %% Fase 2
 % *Ejercicio 6*
 % 
