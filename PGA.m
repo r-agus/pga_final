@@ -199,14 +199,14 @@ ts_disc = Ts * ks_disc
 % la forma factorizada,  polinomial y con potencias negativas en z. Presente la 
 % ecuación en diferencias del  regulador.
 
-clear;
-
+clearvars -except zp;
+ 
 decimales = 5;
 
 % Planta
 Ts=0.035;
 Kg = 0.2345;
-pg = 0.8779;
+pg = zp;
 aproximacion = -3; %log(0.05)
 
 % Especificaciones deseadas
