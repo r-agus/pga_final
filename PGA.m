@@ -199,13 +199,14 @@ Kg = Km/tau; %[output:88a67790]
 pg = -1/tau;
 
 clearvars -except Kg pg Ts aproximacion decimales;
-%%
+%% 
 % Aproximación del BoG, teniendo en cuenta el retardo adicional
+
 fprintf("Equivalente discreto de la planta a controlar") %[output:6627625e]
 G = tf(Kg, [1 -pg]);
 retardo = tf(1, [1 0], Ts);
 BoG = series(c2d(G, Ts), retardo) %[output:1a6f8ec7]
-[NumBoG, DenBoG] = tfdata(BoG, 'v') %[output:96598ee5] %[output:3c9b4261]
+[NumBoG, DenBoG] = tfdata(BoG, 'v'); %[output:96598ee5] %[output:3c9b4261]
 
 % Especificaciones deseadas
 ts = 0.980;
@@ -218,6 +219,7 @@ dif_grados_G = grado_Den_BoG - grado_Num_BoG;
 retardos = dif_grados_G - 1;
 
 % Calculo de parámetros
+ts_prima = ts - retardos*Ts;
 pm = exp(Ts * aproximacion / ts_prima); % Ignorando solución negativa por "no ser práctica"
 km = (1-pm)*(1-erpp);
 
@@ -228,13 +230,12 @@ fprintf("===== MÉTODO DE TRUXAL =====\n" + ... %[output:group:7b551420] %[outpu
     "\t Parámetros: pm = %.0" + decimales + "f\tkm=%.0" + decimales + "f", ... %[output:6858d44f]
     dif_grados_G, pm, km); %[output:group:7b551420] %[output:6858d44f]
 
-ts_prima = ts - retardos*Ts;
 M_obj = zpk(tf(km, [1, -pm], Ts)*(tf(1, [1 0], Ts)^retardos)) %[output:0d771da8]
 
 fprintf("4. Cálculo del controlador") %[output:248373a0]
 F = zpk(minreal(M_obj/(BoG * (1 - M_obj)))) %[output:90101169]
 F = tf(F) %[output:43de15dd]
-fprintf("Ecuación en diferencias del controlador: %s", get_eq_diff(F, decimales, 'e', 'a')) %[output:262f5f1c]
+get_eq_diff(F, decimales, 'e', 'a') %[output:262f5f1c]
 %%
 %[text] **Ejercicio 7**
 %[text] Dibuje una topología (diagrama de bloques) del sistema de acuerdo a las unidades elegidas, que deberán aparecer indicadas en cada señal o secuencia del dibujo.
