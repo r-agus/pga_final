@@ -24,8 +24,7 @@ xlim(1.2*[-1 1])
 ylim(1.2*[-1 1])
 %%
 
-k = (mod_p * (1- mod_p));
-%pi; % lo siento mucho (esto es 3.14)
+k = pi; % lo siento mucho (esto es 3.14)
 q0 = 1 * k;       % q0 =  kp + ki*Ts/2
 q1 = -0.8698 * k; % q1 = -kp + ki*Ts/2
 
