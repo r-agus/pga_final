@@ -79,7 +79,7 @@ for i = 1:length(ficheros) %[output:group:6f221bb3]
 end %[output:group:6f221bb3]
 
 fprintf("Funciones de transferencia:") %[output:6ff7c4d0]
-vpa(funciones_de_transferencia, decimales) %[output:2b3b7a95]
+vpa(funciones_de_transferencia, decimales)
 
 fprintf("Funcion de transferencia media:") %[output:384745d9]
 Km  = mean(cell2mat(Kms));
@@ -87,7 +87,7 @@ tau = mean(cell2mat(taus));
 
 syms s
 G = Km/(tau*s + 1);
-vpa(G, decimales) %[output:4948a632]
+vpa(G, decimales)
 fprintf("Valores de la función media:\n\tKm  = %.0" + decimales + "f m/s/V\n\ttau = %.0" + decimales + "f s", Km, tau) %[output:4ba30451]
 %%
 %[text] **Ejercicio 2**
@@ -290,7 +290,19 @@ end %[output:group:6dcebddd]
 %%
 %[text] ## Fase 3
 %[text] **Ejercicio 10**
-%[text] 
+%[text] Simule en Simulink el sistema de control con y sin alinealidades. Mida las características  de las respuestas (tanto el régimen permanente como el transitorio) ante entradas escalón  de ±1 m/s. Analice las diferencias de las medidas respecto de los cálculos     teóricos.
+
+%[text] **Ejercicio 11**
+%[text] Mediante el GUI, obtenga la captura de la respuesta del sistema para una consigna de 1 m/s  (subiendo) y sin personas transportadas (sin carga). Adjunte una captura de pantalla de la  ventana de gestión del sistema de control en la que se aprecie con la suficiente nitidez el  código fuente del regulador (Figura 2\.b). Mida las características de la respuesta y coteje los resultados con los de la simulación del ejercicio anterior, así como con los cálculos  teóricos realizados en la fase de diseño del regulador. 
+
+%[text] **Ejercicio 12**
+%[text]  Igual que el ejercicio 11 pero con consigna de −1 m/s (bajando). 
+
+%[text] **Ejercicio 13**
+%[text]  Mida en régimen permanente tanto la acción de control como la velocidad de la escalera,  subiendo y bajando en diferentes condiciones de carga de la escalera, para consignas de  ±1 m/s. Relacione los incrementos o decrementos de acción de control con el peso de las  personas presentes en la escalera.
+
+%[text] **Ejercicio 14**
+%[text] Extraiga cuantas reflexiones estime oportunas sobre el cumplimiento de los objetivos y  sobre la comparativa entre especificaciones de diseño y resultados teóricos, simulados y  reales.
 
 %%
 %[text] ## Fase 4
@@ -412,6 +424,7 @@ for i = 1:length(entradas) %[output:group:8413245a]
     end
 end %[output:group:8413245a]
 
+
 %[appendix]
 %---
 %[metadata:view]
@@ -447,14 +460,8 @@ end %[output:group:8413245a]
 %[output:6ff7c4d0]
 %   data: {"dataType":"text","outputData":{"text":"Funciones de transferencia:","truncated":false}}
 %---
-%[output:2b3b7a95]
-%   data: {"dataType":"symbolic","outputData":{"name":"ans","value":"\\left(\\begin{array}{cccc}\n\\frac{0.19}{0.25667\\,s+1.0} & \\frac{0.2084}{0.245\\,s+1.0} & \\frac{0.191}{0.25667\\,s+1.0} & \\frac{0.208}{0.245\\,s+1.0}\n\\end{array}\\right)"}}
-%---
 %[output:384745d9]
 %   data: {"dataType":"text","outputData":{"text":"Funcion de transferencia media:","truncated":false}}
-%---
-%[output:4948a632]
-%   data: {"dataType":"symbolic","outputData":{"name":"ans","value":"\\frac{0.19935}{0.25083\\,s+1.0}"}}
 %---
 %[output:4ba30451]
 %   data: {"dataType":"text","outputData":{"text":"Valores de la función media:\n\tKm  = 0.19935 m\/s\/V\n\ttau = 0.25083 s","truncated":false}}
