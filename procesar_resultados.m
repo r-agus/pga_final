@@ -1,4 +1,4 @@
-function [ts,error] = procesar_resultados(ruta_fichero, Ts, muestras_para_media, decimales)
+function [ts, error, c_inf] = procesar_resultados(ruta_fichero, Ts, muestras_para_media, decimales)
     nombre_fichero = split(ruta_fichero, "/"); nombre_fichero = nombre_fichero(end);
 
     amplitud_perturbacion = str2num(regexprep(nombre_fichero, "escalon_(-?\d+)m_s_(\d+)_.*", "$1 $2"));
