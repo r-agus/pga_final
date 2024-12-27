@@ -31,10 +31,11 @@ function [ts, error, c_inf] = procesar_resultados(ruta_fichero, Ts, muestras_par
     figure
     hold on
     stairs(t_interes, c_interes)
-    if nargin == 5
-        stairs(t_interes, salida_simulacion)
-    end
     plot([0 t_fin - t_ini], 0.95*c_inf*[1 1], 'r:')
+    if nargin == 5
+        stairs(t_interes, salida_simulacion, Color="#ff8000")
+        legend("salida GUI", "","salida Simulink", Location="southeast")
+    end
     %xlim([0 5])
     ylim(1.1 * [min(0, c_inf) max(0, c_inf)])
     sgtitle("Respuesta al escalón de amplitud " + amplitud + " m/s con " + personas + " personas de la planta")
