@@ -30,7 +30,7 @@ function [ts, error, c_inf] = procesar_resultados(ruta_fichero, Ts, muestras_par
     plot([0 t_fin - t_ini], 0.95*c_inf*[1 1], 'r:')
     %xlim([0 5])
     ylim(1.1 * [min(0, c_inf) max(0, c_inf)])
-    title("Respuesta al escalón de amplitud " + amplitud + " m/s con " + personas + " personas de la planta")
+    sgtitle("Respuesta al escalón de amplitud " + amplitud + " m/s con " + personas + " personas de la planta")
     xlabel("Tiempo (s)")
     ylabel("Velocidad escalera (m/s)")
 
