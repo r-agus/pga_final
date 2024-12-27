@@ -1,4 +1,4 @@
-function [ts, error, c_inf] = procesar_resultados(ruta_fichero, Ts, muestras_para_media, decimales)
+function [ts, error, c_inf] = procesar_resultados(ruta_fichero, Ts, muestras_para_media, decimales, salida_simulacion)
     nombre_fichero = split(ruta_fichero, "/"); nombre_fichero = nombre_fichero(end);
 
     amplitud_perturbacion = str2num(regexprep(nombre_fichero, "escalon_(-?\d+)m_s_(\d+)_.*", "$1 $2"));
@@ -19,6 +19,10 @@ function [ts, error, c_inf] = procesar_resultados(ruta_fichero, Ts, muestras_par
 
     t_interes = tiempo(x_ini:x_fin) - tiempo(x_ini);
     c_interes = salida(x_ini:x_fin);
+    
+    if nargin == 5
+        salida_simulacion(end+1:length(t_interes)) = salida_simulacion(end);
+    end
 
     c_inf = mean(c_interes(end-muestras_para_media, end));
 
@@ -27,6 +31,9 @@ function [ts, error, c_inf] = procesar_resultados(ruta_fichero, Ts, muestras_par
     figure
     hold on
     stairs(t_interes, c_interes)
+    if nargin == 5
+        stairs(t_interes, salida_simulacion)
+    end
     plot([0 t_fin - t_ini], 0.95*c_inf*[1 1], 'r:')
     %xlim([0 5])
     ylim(1.1 * [min(0, c_inf) max(0, c_inf)])
