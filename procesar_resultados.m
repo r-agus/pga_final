@@ -1,4 +1,9 @@
 function [ts, error, c_inf] = procesar_resultados(ruta_fichero, Ts, muestras_para_media, decimales, salida_simulacion)
+% procesar_resultados: Esta funcion procesa un fichero generado por la GUI
+% y representa en una gráfica el contenido de este. Extrae datos de interés
+% como el ts, el error y el valor final de la salida, como una media de un
+% número específico de muestras. Además admite como paramétro opcional la
+% salida de una simulación, en cuyo caso representa las dos gráficas.
     nombre_fichero = split(ruta_fichero, "/"); nombre_fichero = nombre_fichero(end);
 
     amplitud_perturbacion = str2num(regexprep(nombre_fichero, "escalon_(-?\d+)m_s_(\d+)_.*", "$1 $2"));
@@ -43,7 +48,7 @@ function [ts, error, c_inf] = procesar_resultados(ruta_fichero, Ts, muestras_par
     ylabel("Velocidad escalera (m/s)")
 
     ts = ks*Ts;
-    error = c_inf - amplitud;
+    error = amplitud - c_inf;
 
     fprintf("Escalón de %d m/s, con %d personas.\n\tMedia de las últimas %d muestras = %.0" + decimales + "f m/s\n\tts  = %.0" ...
         + decimales + "f s\n", amplitud, personas, muestras_para_media, c_inf, ts);
