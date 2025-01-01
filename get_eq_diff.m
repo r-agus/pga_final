@@ -1,4 +1,7 @@
 function get_eq_diff(transfer_function, decimales, input, output)
+% Funcion para generar la ecuacion en diferencias a partir 
+% de la funcion de transferencia. Genera la forma matematica
+% y el formato para la GUI.
     [n, d] = tfdata(transfer_function, 'v');
     orden  = length(d);
     str    = "c[k] =";
